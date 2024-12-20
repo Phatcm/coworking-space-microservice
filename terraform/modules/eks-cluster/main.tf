@@ -37,7 +37,7 @@ resource "aws_iam_role_policy_attachment" "demo-AmazonEKSLoadBalancingPolicy" {
   role = aws_iam_role.demo.name
 }
 
-resource "aws_iam_role_policy_attachment" "demo-AmazonEKSNetworkingPolicy " {
+resource "aws_iam_role_policy_attachment" "demo-AmazonEKSNetworkingPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy"
   role = aws_iam_role.demo.name
 }

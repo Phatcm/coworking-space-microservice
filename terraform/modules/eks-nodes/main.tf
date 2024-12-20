@@ -33,12 +33,25 @@ resource "aws_iam_role_policy_attachment" "nodes-AmazonEC2ContainerRegistryReadO
 }
 
 resource "aws_eks_node_group" "private-nodes" {
-  cluster_name = aws_eks_cluster.demo.name
+  cluster_name = var.cluster_name
   subnet_ids = var.private_subnet_ids
   node_role_arn = aws_iam_role.nodes.arn
+
+  capacity_type  = "ON_DEMAND"
+  instance_types = ["t3.small"]
+
   scaling_config {
     desired_size = 1
-    max_size = 2
+    max_size = 5
     min_size = 0
   }
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  labels = {
+    role = "general"
+  }
+
 }

@@ -38,5 +38,11 @@ module "eks-nodes" {
   source = "./modules/eks-nodes"
   project = local.name
   env = var.env
+  cluster_name = module.eks-cluster.cluster_name
   private_subnet_ids = module.vpc.private_subnet_ids
+}
+
+module "iam-odic" {
+  source = "./modules/iam"
+  eks_issuer = module.eks-cluster.eks_issuer
 }

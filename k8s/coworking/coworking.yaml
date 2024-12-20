@@ -46,11 +46,18 @@ spec:
           timeoutSeconds: 5
         envFrom:
         - configMapRef:
-            name: <NAME OF THE ConfigMap>
+            name: coworking-postgresql
         env:
-        - name: DB_PASSWORD
+        - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: <NAME OF THE Secret>
-              key: <THE KEY FROM Secret WHICH has THE ENCODED PASSWORD>
+              name: postgresql-credentials
+              key: POSTGRES_PASSWORD
+        resources:
+          requests:
+            memory: "256Mi"  # Minimum memory the container needs
+            cpu: "250m"      # Minimum CPU the container needs (0.5 CPU core)
+          limits:
+            memory: "256Mi"    # Maximum memory the container can use
+            cpu: "250m"         # Maximum CPU the container can use (1 CPU core)
       restartPolicy: Always
