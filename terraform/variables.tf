@@ -53,3 +53,25 @@ variable "cluster1_name" {
   description = "name of the EKS cluster"
   type = string
 }
+
+#ECR variables:
+variable "ecr_name" {
+  description = "Name of the ECR repo"
+  type = string
+}
+
+#Codebuild variables:
+variable "repository_name" {
+  description = "Name of the CodeBuild repo"
+  type = string
+}
+
+variable "github_repo_url" {
+  description = "Endpoint of github project"
+  type = string
+}
+
+variable "buildspec_path" {
+  description = "value"
+  type = string
+}

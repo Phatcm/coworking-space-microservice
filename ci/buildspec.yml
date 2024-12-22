@@ -1,0 +1,23 @@
+version: 0.2
+
+#Use secret manager later
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_NAME
+      - echo REPOSITORY_URI=$REPOSITORY_URI
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t $REPO_NAME ./src/analytics
+      - docker tag $REPO_NAME:latest $REPOSITORY_URI:latest
+  post_build:
+    commands:
+      - echo Pushing the Docker image to ECR...
+      - docker push $REPOSITORY_URI:latest
+
+artifacts:
+  files:
+    - '**/*'

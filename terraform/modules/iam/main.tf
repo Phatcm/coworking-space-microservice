@@ -1,3 +1,4 @@
+#EKS
 data "tls_certificate" "eks" {
   url = var.eks_issuer
 }
@@ -52,3 +53,4 @@ resource "aws_iam_role_policy_attachment" "test_attach" {
   policy_arn = aws_iam_policy.test-policy.arn
 }
 
+#CodeBuild

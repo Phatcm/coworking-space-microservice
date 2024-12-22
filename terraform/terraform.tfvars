@@ -9,4 +9,10 @@ public_subnets = ["10.0.0.0/24", "10.0.1.0/24"]
 private_subnets = ["10.0.2.0/24", "10.0.3.0/24"]
 aws_avaibility_zones = ["us-east-1a", "us-east-1b"]
 ssh_location = "0.0.0.0/0"
+
 cluster1_name = "terraform-cluster-1"
+ecr_name = "coworking"
+
+repository_name = "coworking"
+github_repo_url = "https://github.com/Phatcm/coworking-space-microservice.git"
+buildspec_path = "ci/buildspec.yml"

@@ -12,6 +12,7 @@ provider "aws" {
   profile = var.profile
 }
 
+data "aws_caller_identity" "current" {}
 
 module "vpc" {
   source = "./modules/vpc"
@@ -45,4 +46,26 @@ module "eks-nodes" {
 module "iam-odic" {
   source = "./modules/iam"
   eks_issuer = module.eks-cluster.eks_issuer
+}
+
+module "ecr_repo" {
+  source = "./modules/ecr"
+  project = local.name
+  env = var.env
+  ecr_name = var.ecr_name
+}
+
+module "codebuild" {
+  source = "./modules/codebuild"
+  project = local.name
+  env = var.env
+  aws_region = var.region
+  account_id = data.aws_caller_identity.current.account_id
+  repository_name = var.repository_name
+  github_repo_url = var.github_repo_url
+  buildspec_path = var.buildspec_path
+
+  depends_on = [
+    module.ecr_repo  # Ensuring ecr_repo setup before codebuild
+  ]
 }
