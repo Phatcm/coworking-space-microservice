@@ -7,7 +7,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    name: coworking
+    service: coworking
   ports:
     - protocol: TCP
       port: 80

@@ -32,6 +32,11 @@ resource "aws_iam_role_policy_attachment" "codebuild-AmazonS3FullAccess" {
   role = aws_iam_role.codebuild.name
 }
 
+resource "aws_iam_role_policy_attachment" "codebuild-CloudWatchLogsFullAccess" {
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+  role       = aws_iam_role.codebuild.name
+}
+
 #Codebuild
 resource "aws_codebuild_project" "codebuild" {
   name           = "${var.repository_name}-build"
