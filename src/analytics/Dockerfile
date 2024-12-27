@@ -1,17 +1,20 @@
-#Base image
+# Base image
 FROM python:3.10-slim
 
-# Set the working directory to /src (not inside analytics)
+# Set the working directory
 WORKDIR /src
 
-# Copy the requirements.txt file for caching
+# Copy requirements.txt for caching
 COPY src/analytics/requirements.txt /src/requirements.txt
 
-# Install python dependencies
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the whole src directory to /src
-COPY src /src
+COPY src /src   
+
+# Set PYTHONPATH to include the /src directory
+ENV PYTHONPATH="/src"
 
 # Expose ports
 EXPOSE 80 443 5000
