@@ -1,106 +1,104 @@
 # coworking-space-microservice
-This project provides a comprehensive understanding of building and managing microservices at scale using Kubernetes, Docker and AWS.
 
-## Getting Started
+This project provides a microservice architecture for a coworking space management application, designed to be deployed on AWS using EKS (Elastic Kubernetes Service), Docker, Terraform, and Helm. The application includes several components such as an analytics service, database, and a Kubernetes cluster setup for scaling the infrastructure. This also a part of my Udacity Cloud Devops Nanodegree project.
 
-### Dependencies
-#### Local Environment
-1. Python Environment - run Python 3.6+ applications and install Python dependencies via `pip`
-2. Docker CLI - build and run Docker images locally
-3. `kubectl` - run commands against a Kubernetes cluster
-4. `helm` - apply Helm Charts to a Kubernetes cluster
+The README will provide a comprehensive overview of the deployment process and guidance on how to release new builds and deploy changes to environment.
 
-#### Remote Resources
-1. AWS CodeBuild - build Docker images remotely
-2. AWS ECR - host Docker images
-3. Kubernetes Environment with AWS EKS - run applications in k8s
-4. AWS CloudWatch - monitor activity and logs in EKS
-5. GitHub - pull and clone code
+---
+## Technologies and Tools Used
 
-### Setup
-#### 1. Configure a Database
-Set up a Postgres database using a Helm Chart.
+- **Linux Environment**: This instruction is based on Linux environment command, if you use window or others please consider the changes.
+- **Docker**: Containerizes the microservices to ensure consistent environments across development, testing, and production.
+- **Kubernetes**: Manages the deployment and scaling of containerized applications on AWS EKS.
+- **AWS EKS**: Provides a managed Kubernetes service for easy deployment and scaling of Kubernetes clusters.
+- **Terraform**: Infrastructure as code (IaC) tool used to automate the provisioning and management of the infrastructure, including VPC, EKS, ECR, IAM roles, and more.
+- **Helm**: A package manager for Kubernetes used to deploy the `metrics-server` chart for monitoring resource usage in the Kubernetes cluster.
+- **AWS CodeBuild**: Continuous integration and build service that automates the process of building and deploying Docker images to Amazon ECR.
 
-1. Set up Bitnami Repo
+---
+## Deployment Process
+### 1. **Infrastructure Setup with Terraform**
+The infrastructure for the coworking space microservice is set up using Terraform. The following resources are provisioned:
+- VPC (Virtual Private Cloud)
+- EKS Cluster
+- ECR (Elastic Container Registry)
+- IAM roles for authentication and permissions
+- Kubernetes resources (deployments, services, and configs)
+
+To deploy the infrastructure, run the following commands:
 ```bash
-helm repo add <REPO_NAME> https://charts.bitnami.com/bitnami
+cd terraform
+terraform init   # Initialize Terraform and download necessary providers
+terraform plan   # Preview the changes Terraform will make
+terraform apply  # Apply the infrastructure changes
+aws eks --region us-east-1 update-kubeconfig --name terraform-cluster-1 #Update EKS kubeconfig
+kubectl config current-context 
+kubectl get svc 
 ```
+Once applied, Terraform will create all necessary infrastructure components, including your EKS cluster and VPC.
 
-2. Install PostgreSQL Helm Chart
-```
-helm install <SERVICE_NAME> <REPO_NAME>/postgresql
-```
+### 2. **Building and Pushing Docker Images**
+Currently the Codebuild is not using web hook, so the step to use AWS Codebuild for docker image creation:
+- Login into AWS Portal
+- Search for AWS Codebuild 
+- Select Buil Projects in the left panel
+- Press Start Build to trigger the process
+- Update ECR image url in k8s/coworking/coworking.yaml
 
-This should set up a Postgre deployment at `<SERVICE_NAME>-postgresql.default.svc.cluster.local` in your Kubernetes cluster. You can verify it by running `kubectl svc`
-
-By default, it will create a username `postgres`. The password can be retrieved with the following command:
+### 3. **Create Database Service**
+To deploy Postgresql database to EKS node:
 ```bash
-export POSTGRES_PASSWORD=$(kubectl get secret --namespace default <SERVICE_NAME>-postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
-
-echo $POSTGRES_PASSWORD
+cd ..
+./k8s/database/secret.sh #Or execute the content in terminal
+kubectl apply -f k8s/database/pvc.yaml   # To deploy volume claim
+kubectl apply -f k8s/database/pv.yaml 
+kubectl apply -f k8s/database/postgresql-deployment.yaml
+kubectl apply -f k8s/database/postgresql-service.yaml
 ```
-
-<sup><sub>* The instructions are adapted from [Bitnami's PostgreSQL Helm Chart](https://artifacthub.io/packages/helm/bitnami/postgresql).</sub></sup>
-
-3. Test Database Connection
-The database is accessible within the cluster. This means that when you will have some issues connecting to it via your local environment. You can either connect to a pod that has access to the cluster _or_ connect remotely via [`Port Forwarding`](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/)
-
-* Connecting Via Port Forwarding
+Create initial data for testing purpose:
+- Establish the port-forward:
 ```bash
-kubectl port-forward --namespace default svc/<SERVICE_NAME>-postgresql 5432:5432 &
-    PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432
+kubectl port-forward service/postgresql-service 5433:5432 & #forward the postgresql service to local port 5433
 ```
-
-* Connecting Via a Pod
+- Install postgresql:
 ```bash
-kubectl exec -it <POD_NAME> bash
-PGPASSWORD="<PASSWORD HERE>" psql postgres://postgres@<SERVICE_NAME>:5432/postgres -c <COMMAND_HERE>
+apt update
+apt install postgresql postgresql-contrib
 ```
-
-4. Run Seed Files
-We will need to run the seed files in `db/` in order to create the tables and populate them with data.
-
+- Connect to the database using psql and execute the sql files:
 ```bash
-kubectl port-forward --namespace default svc/<SERVICE_NAME>-postgresql 5432:5432 &
-    PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432 < <FILE_NAME.sql>
+psql --host 127.0.0.1 -U myuser -d mydatabase -p 5433
+\i src/db/1_create_tables.sql
+\i src/db/2_seed_users.sql
+\i src/db/3_seed_tokens.sql
 ```
 
-### 2. Running the Analytics Application Locally
-In the `analytics/` directory:
-
-1. Install dependencies
+### 4. **Create Coworking Service**
+To deploy coworking service:
 ```bash
-pip install -r requirements.txt
+kubectl apply -f k8s/coworking/configmap.yaml   # To deploy volume claim
+kubectl apply -f k8s/coworking/coworking.yaml 
+kubectl get pod #Check for running pod
+curl <lb-url>:5153/api/reports/daily_usage #Test the api route using public loadbalancer address
 ```
-2. Run the application (see below regarding environment variables)
+
+
+### 5. **Create Horizontal Pod Autoscaler**
+To HPA service for coworking:
 ```bash
-<ENV_VARS> python app.py
+kubectl apply -f k8s/autoscaler/hpa.yaml
+kubectl get hpa #Check for running pod
 ```
 
-There are multiple ways to set environment variables in a command. They can be set per session by running `export KEY=VAL` in the command line or they can be prepended into your command.
-
-* `DB_USERNAME`
-* `DB_PASSWORD`
-* `DB_HOST` (defaults to `127.0.0.1`)
-* `DB_PORT` (defaults to `5432`)
-* `DB_NAME` (defaults to `postgres`)
-
-If we set the environment variables by prepending them, it would look like the following:
+---
+## Troubleshooting
+1. In case of pod failure consider those to check for error logs:
 ```bash
-DB_USERNAME=username_here DB_PASSWORD=password_here python app.py
+kubectl get pod
+kubectl logs <pod_name>
+kubectl describe pod <pod_name>
 ```
-The benefit here is that it's explicitly set. However, note that the `DB_PASSWORD` value is now recorded in the session's history in plaintext. There are several ways to work around this including setting environment variables in a file and sourcing them in a terminal session.
-
-3. Verifying The Application
-* Generate report for check-ins grouped by dates
-`curl <BASE_URL>/api/reports/daily_usage`
-
-* Generate report for check-ins grouped by users
-`curl <BASE_URL>/api/reports/user_visits`
-
-## Project Instructions
-1. Set up a Postgres database with a Helm Chart
-2. Create a `Dockerfile` for the Python application. Use a base image that is Python-based.
-3. Write a simple build pipeline with AWS CodeBuild to build and push a Docker image into AWS ECR
-4. Create a service and deployment using Kubernetes configuration files to deploy the application
-5. Check AWS CloudWatch for application logs
+2. To drop the infrastructure execute (stand in terraform folder):
+```bash
+terraform destroy
+```

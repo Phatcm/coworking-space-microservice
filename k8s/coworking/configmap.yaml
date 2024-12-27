@@ -4,6 +4,6 @@ metadata:
   name: coworking-postgresql
 data:
   DB_NAME: mydatabase
-  DB_USER: myuser
+  DB_USERNAME: myuser
   DB_HOST: postgresql-service
   DB_PORT: "5432"

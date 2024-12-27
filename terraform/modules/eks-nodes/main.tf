@@ -32,6 +32,12 @@ resource "aws_iam_role_policy_attachment" "nodes-AmazonEC2ContainerRegistryReadO
   role       = aws_iam_role.nodes.name
 }
 
+#Cloud watch policy 
+resource "aws_iam_role_policy_attachment" "eks_cloudwatch_policy" {
+  role       = aws_iam_role.nodes.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
 resource "aws_eks_node_group" "private-nodes" {
   cluster_name = var.cluster_name
   subnet_ids = var.private_subnet_ids

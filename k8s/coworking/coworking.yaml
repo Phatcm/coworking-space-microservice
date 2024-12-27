@@ -48,7 +48,7 @@ spec:
         - configMapRef:
             name: coworking-postgresql
         env:
-        - name: POSTGRES_PASSWORD
+        - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: postgresql-credentials

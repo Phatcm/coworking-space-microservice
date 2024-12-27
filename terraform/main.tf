@@ -11,6 +11,26 @@ provider "aws" {
   region = var.region
   profile = var.profile
 }
+#Config K8s provider
+# Get the EKS cluster details
+data "aws_eks_cluster" "eks" {
+  name = module.eks-cluster.cluster_name
+}
+
+data "aws_eks_cluster_auth" "eks" {
+  name = data.aws_eks_cluster.eks.name
+}
+
+# Kubernetes provider to interact with the cluster
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.eks.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks.certificate_authority[0].data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", module.eks-cluster.cluster_name]
+    command     = "aws"
+  }
+}
 
 data "aws_caller_identity" "current" {}
 
@@ -68,4 +88,8 @@ module "codebuild" {
   depends_on = [
     module.ecr_repo  # Ensuring ecr_repo setup before codebuild
   ]
+}
+
+module "metrics_server" {
+  source = "./modules/metrics-server"
 }

@@ -1,3 +1,4 @@
+#IAM role for EKS cluster
 resource "aws_iam_role" "demo" {
   name = "eks_cluster_demo"
   assume_role_policy = <<POLICY
@@ -42,6 +43,7 @@ resource "aws_iam_role_policy_attachment" "demo-AmazonEKSNetworkingPolicy" {
   role = aws_iam_role.demo.name
 }
 
+#Create EKS cluster
 resource "aws_eks_cluster" "demo" {
   name = var.cluster_name
   role_arn = aws_iam_role.demo.arn
@@ -51,6 +53,26 @@ resource "aws_eks_cluster" "demo" {
       var.private_subnet_ids
     )
   }
-
+  tags = {
+    Terraform = "true"
+    Project = "${var.project}"
+    Name = "${var.project}-vpc"
+    Environment = "${var.env}"
+  }
   depends_on = [aws_iam_role_policy_attachment.demo-AmazonEKSClusterPolicy]
+}
+
+#Cloudwatch container insight addon
+resource "aws_eks_addon" "cloudwatch_observability" {
+  cluster_name =  aws_eks_cluster.demo.name
+  addon_name   = "amazon-cloudwatch-observability"
+  addon_version = "v2.6.0-eksbuild.1" 
+  resolve_conflicts_on_create  = "OVERWRITE"
+
+  tags = {
+    Terraform = "true"
+    Project = "${var.project}"
+    Name = "${var.project}-vpc"
+    Environment = "${var.env}"
+  }
 }
