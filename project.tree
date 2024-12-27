@@ -1,0 +1,68 @@
+.
+├── LICENSE
+├── README.md
+├── ci
+│   └── buildspec.yml
+├── k8s
+│   ├── autoscaler
+│   │   └── hpa.yaml
+│   ├── aws-test.yaml
+│   ├── coworking
+│   │   ├── configmap.yaml
+│   │   ├── coworking.yaml
+│   │   └── public-lb.yaml
+│   └── database
+│       ├── postgresql-deployment.yaml
+│       ├── postgresql-service.yaml
+│       ├── pv.yaml
+│       ├── pvc.yaml
+│       └── secret.sh
+├── project.tree
+├── screenshot
+├── src
+│   ├── analytics
+│   │   ├── Dockerfile
+│   │   ├── __init__.py
+│   │   ├── app.py
+│   │   ├── config.py
+│   │   └── requirements.txt
+│   └── db
+│       ├── 1_create_tables.sql
+│       ├── 2_seed_users.sql
+│       └── 3_seed_tokens.sql
+└── terraform
+    ├── main.tf
+    ├── modules
+    │   ├── codebuild
+    │   │   ├── main.tf
+    │   │   ├── output.tf
+    │   │   └── variables.tf
+    │   ├── ecr
+    │   │   ├── main.tf
+    │   │   ├── output.tf
+    │   │   └── variables.tf
+    │   ├── eks-cluster
+    │   │   ├── main.tf
+    │   │   ├── output.tf
+    │   │   └── variables.tf
+    │   ├── eks-nodes
+    │   │   ├── main.tf
+    │   │   ├── output.tf
+    │   │   └── variables.tf
+    │   ├── iam
+    │   │   ├── main.tf
+    │   │   ├── output.tf
+    │   │   └── variables.tf
+    │   ├── metrics-server
+    │   │   ├── main.tf
+    │   │   ├── output.tf
+    │   │   └── variables.tf
+    │   └── vpc
+    │       ├── main.tf
+    │       ├── output.tf
+    │       └── variables.tf
+    ├── output.tf
+    ├── terraform.tfstate
+    ├── terraform.tfstate.backup
+    ├── terraform.tfvars
+    └── variables.tf
