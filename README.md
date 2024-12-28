@@ -38,10 +38,12 @@ kubectl get svc
 Once applied, Terraform will create all necessary infrastructure components, including your EKS cluster and VPC.
 
 ### 2. **Building and Pushing Docker Images**
-Currently the Codebuild is not using web hook, so the step to use AWS Codebuild for docker image creation:
+Currently the Codebuild is using web hook, so the step to use AWS Codebuild for docker image creation:
+- Create Github access token with read & webhook permission in Setting > Developer setting > Fined grain token
 - Login into AWS Portal
 - Search for AWS Codebuild 
 - Select Buil Projects in the left panel
+- Update the Github permission by adding the token in Project details > Source
 - Press Start Build to trigger the process
 - Update ECR image url in k8s/coworking/coworking.yaml
 
@@ -49,9 +51,9 @@ Currently the Codebuild is not using web hook, so the step to use AWS Codebuild 
 To deploy Postgresql database to EKS node:
 ```bash
 cd ..
-./k8s/database/secret.sh #Or execute the content in terminal
-kubectl apply -f k8s/database/pvc.yaml   # To deploy volume claim
+kubectl apply -f k8s/database/pvc.yaml # To deploy volume claim
 kubectl apply -f k8s/database/pv.yaml 
+kubectl apply -f k8s/postgresql-secret.yaml #create secret for postgresdb credentials
 kubectl apply -f k8s/database/postgresql-deployment.yaml
 kubectl apply -f k8s/database/postgresql-service.yaml
 ```
